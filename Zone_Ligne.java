@@ -20,6 +20,9 @@ public class Zone_Ligne extends Zone{
     }
     @Override
     public String getSymbole(){
-        return "N";
+        return "L";
+    }
+    public void actionSpeciale(Desert d) {
+        System.out.println(this.pieceReference + " est sur la ligne " + this.numeroLigne);
     }
 }

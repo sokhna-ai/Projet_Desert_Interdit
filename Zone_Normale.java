@@ -7,7 +7,7 @@ public class Zone_Normale extends Zone{
     public String getpieceCachee(){
         return this.pieceCachee;
     }
-    public void setpieceCachee(string p){
+    public void setpieceCachee(String p){
         this.pieceCachee = p;
     }
     @Override
