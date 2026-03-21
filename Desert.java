@@ -52,7 +52,7 @@ public class Desert {
             while(!ok){
                 x=rand.nextInt(5);
                 y=rand.nextInt(5);
-                if(this.zones[x][y] instanceof Zone_Normale 
+                if(this.zones[y][x] instanceof Zone_Normale 
                     &&  ((Zone_Normale)this.zones[y][x]).getpieceCachee().equals("")){
                     this.zones[y][x] = new Piste_Vol(x,y);
                      ok=true;
@@ -62,7 +62,7 @@ public class Desert {
             while(!ok){
                 x=rand.nextInt(5);
                 y=rand.nextInt(5);
-                if(this.zones[x][y] instanceof Zone_Normale 
+                if(this.zones[y][x] instanceof Zone_Normale 
                     &&  ((Zone_Normale)this.zones[y][x]).getpieceCachee().equals("")){
                     this.zones[y][x] = new Crash_Helicoptere(x,y);
                      ok=true;
@@ -80,7 +80,7 @@ public class Desert {
             while(!ok){
                 x=rand.nextInt(5);
                 y=rand.nextInt(5);
-                if(this.zones[x][y] instanceof Zone_Normale 
+                if(this.zones[y][x] instanceof Zone_Normale 
                     &&  ((Zone_Normale)this.zones[y][x]).getpieceCachee().equals("")
                     &&  getNbPieceEnLigne(x)<1&&getNbPieceEnColonne(y)<1){
                         ((Zone_Normale)this.zones[y][x]).setpieceCachee(PIECES[i]); 
@@ -99,7 +99,7 @@ public class Desert {
         boolean ok = false;
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 5; j++) {
-                if (this.zones[i][j] instanceof Zone_Normale && ((Zone_Normale)this.zones[i][j]).getpieceCachee()!="") {
+                if (this.zones[i][j] instanceof Zone_Normale && !((Zone_Normale)this.zones[i][j]).getpieceCachee().equals("")) {
                     ok=false;
                     while (!ok) {
                         if (nbEssais>PAREFEU) {
@@ -107,7 +107,7 @@ public class Desert {
                         }
                         nbEssais++;
                         x=rand.nextInt(5);
-                        if (this.zones[i][x] instanceof Zone_Normale && ((Zone_Normale)this.zones[i][j]).getpieceCachee()=="") {
+                        if (this.zones[i][x] instanceof Zone_Normale && ((Zone_Normale)this.zones[i][j]).getpieceCachee().equals("")) {
                             this.zones[i][x] = new Zone_Colonne(x,i,i,((Zone_Normale)this.zones[i][j]).getpieceCachee());
                             ok = true;
                         }
@@ -119,7 +119,7 @@ public class Desert {
                         }
                         nbEssais++;
                         y=rand.nextInt(5);
-                        if (this.zones[y][i] instanceof Zone_Normale && ((Zone_Normale)this.zones[y][i]).getpieceCachee()=="") {
+                        if (this.zones[y][i] instanceof Zone_Normale && ((Zone_Normale)this.zones[y][i]).equals("")) {
                             this.zones[y][i] = new Zone_Ligne(y,i,i,((Zone_Normale)this.zones[i][j]).getpieceCachee());
                             ok = true;
                         }
@@ -134,23 +134,26 @@ public class Desert {
     private boolean initialiserOasis() {
         int x;
         int y;
-        boolean ok = false;
+        boolean ok;
         for (int i=0;i<2;i++){
             ok=false;
             while(!ok){
                 x=rand.nextInt(5);
                 y=rand.nextInt(5);
-                if(this.zones[x][y] instanceof Zone_Normale 
+                if(this.zones[y][x] instanceof Zone_Normale 
                     &&  ((Zone_Normale)this.zones[y][x]).getpieceCachee().equals("")){
                     this.zones[y][x] = new Oasis(x,y,false);
                      ok=true;
                     }
             }
         }
+
+        
+        ok = false;
         while(!ok){
                 x=rand.nextInt(5);
                 y=rand.nextInt(5);
-                if(this.zones[x][y] instanceof Zone_Normale 
+                if(this.zones[y][x] instanceof Zone_Normale 
                     &&  ((Zone_Normale)this.zones[y][x]).getpieceCachee().equals("")){
                     this.zones[y][x] = new Oasis(x,y,true);
                      ok=true;
@@ -167,7 +170,7 @@ public class Desert {
             while(!ok){
                 x=rand.nextInt(5);
                 y=rand.nextInt(5);
-                if(this.zones[x][y] instanceof Zone_Normale 
+                if(this.zones[y][x] instanceof Zone_Normale 
                     &&  ((Zone_Normale)this.zones[y][x]).getpieceCachee().equals("")){
                     this.zones[y][x] = new Tunnel(x,y);
                      ok=true;
