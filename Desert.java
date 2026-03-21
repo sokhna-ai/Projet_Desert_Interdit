@@ -4,6 +4,7 @@ import java.util.Random;
 
 
 public class Desert {
+    private enum Direction { HAUT, DROITE, BAS, GAUCHE };
     final static int NB_PIECES=4;
     final static String[] PIECES={"Moteur","Hélice","Gouvernail","Capteur"};
     final static int PAREFEU=500;
@@ -22,8 +23,14 @@ public class Desert {
         this.joueurs = new ArrayList<>();
         this.zones  =  new Zone[5][5];
         rand = new Random();
+        xOeil=2;
+        yOeil=2;
         while (!(initialiserPieces() && initialiserZones()&&initialiserZonesColonneLigne()&&initialiserOasis()&&initialiserTunnel()&&initialiserPisteEtCrash())){ 
         }
+    }
+
+    public Zone getZone(int x, int y) {
+        return this.zones[y][x];
     }
 
     private boolean ajouterJoueur(Joueur j, int x, int y){
@@ -200,5 +207,113 @@ public class Desert {
         return nb;
     }
 
+    //!!!à finir
+    private void finDeTour() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'finDeTour'");
+    }    
+
+    public int totalSable(){
+        int total=0;
+        for(int i=0;i<5;i++){
+            for(int j=0;j<5;j++){
+                total+=this.zones[i][j].getnbSable();
+            }
+        }
+        return total;
+    }  
+
+    private void soufflerVent(){
+        int x=rand.nextInt(4);
+        int distance = rand.nextInt(2)+1;
+        Direction dir = Direction.values()[x];
+        Zone zone;
+        switch (dir) {
+            case HAUT:
+                for(int i=0;i<distance;i++){
+                    if (this.yOeil!=0) {
+                        this.yOeil--;
+                        zone=getZone(this.xOeil,this.yOeil);
+                        if (zone.getnbSable()<2) {
+                            zone.setNbSable(zone.getnbSable()+1);
+                            this.totalSable++;
+                        }
     
+                    }
+                }
+                
+                break;
+            case BAS:
+                for(int i=0;i<distance;i++){
+                    if (this.yOeil!=4) {
+                        this.yOeil++;
+                        zone=getZone(this.xOeil,this.yOeil);
+                        if (zone.getnbSable()<2) {
+                            zone.setNbSable(zone.getnbSable()+1);
+                            this.totalSable++;
+                        }
+                    }
+                }
+                break;
+            case DROITE:
+                for(int i=0;i<distance;i++){
+                    if (this.xOeil!=4) {
+                        this.xOeil++;
+                        zone=getZone(this.xOeil,this.yOeil);
+                        if (zone.getnbSable()<2) {
+                            zone.setNbSable(zone.getnbSable()+1);
+                            this.totalSable++;
+                        }
+                    }
+                }
+                break;
+            case GAUCHE:
+                for(int i=0;i<distance;i++){
+                    if (this.xOeil!=0) {
+                        this.xOeil--;
+                        zone=getZone(this.xOeil,this.yOeil);
+                        if (zone.getnbSable()<2) {
+                            zone.setNbSable(zone.getnbSable()+1);
+                            this.totalSable++;
+                        }
+                    }
+                }
+                break;
+        
+            default:
+                break;
+        }
+    }
+
+    private void vagueDeChaleur() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'vagueDeChaleur'");
+    }
+
+    private void tempeteSeDechaine() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'tempeteSeDechaine'");
+    }
+    
+    private boolean estVicoire() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'estVicoire'");
+    }
+    private boolean estDefaite() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'est Defaite'");
+    }
+    private boolean estEnsable() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'estEnsable'");
+    }
+    public void afficherGrille() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("afficherGrille'");
+    }
+
+
+
 }
+
+
