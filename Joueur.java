@@ -40,4 +40,10 @@ public class Joueur {
     public int getY() {
         return y;
     }
+    public String getNom() {
+        return this.nom;
+    }
+    public void setNom(String name){
+        this.nom = name;
+    }
 }
