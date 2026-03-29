@@ -11,7 +11,7 @@ public class Vue extends JFrame {
 
     private Desert desert;
     private GridBagLayout layout; // J'utlise GridBagLayout pour les cases
-    private JPanel overview;
+    private Overview overview;
 
     /**
      * Constructeur
@@ -39,20 +39,23 @@ public class Vue extends JFrame {
      * @return
      */
     private boolean setLayout() {
-        layout = new GridBagLayout();
+
+        layout = new GridBagLayout();/* J'utlise GridBagLayout pour les cases */
         this.setLayout(layout);
 
         GridBagConstraints c = new GridBagConstraints();
 
         c.weightx = 5.0;
         c.weighty = 1.0;
-        c.gridwidth=2;
+        c.gridwidth = 2;
         c.fill = GridBagConstraints.BOTH;
         c.gridx = 0;
         c.gridy = 0;
         setOverview();
         this.add(overview, c);
-        c.gridwidth=1;
+
+        /* La répartition de la grille et de la barre de log est 3:2 */
+        c.gridwidth = 1;
         c.weightx = 3.0;
         c.weighty = 4.0;
         c.gridx = 0;
@@ -65,7 +68,8 @@ public class Vue extends JFrame {
         c.gridy = 1;
         JPanel barreDeLog = new BarreDeLog();
         this.add(barreDeLog, c);
-        c.gridwidth=2;
+
+        c.gridwidth = 2;
         c.weightx = 1.0;
         c.weighty = 1.0;
         c.gridx = 0;
@@ -88,6 +92,20 @@ public class Vue extends JFrame {
         return true;
     }
 
+    /**
+     * Mise a jour de l'overview
+     * Reste à finir
+     * 
+     * @return
+     */
+    private boolean updateOverview() {
+        return true;
+    }
+
+    /**
+     * 
+     * Classe qui représente la barre de navigation au dessus
+     */
     private class Overview extends JPanel {
         BlocText jour;
         BlocText sable;
@@ -108,6 +126,9 @@ public class Vue extends JFrame {
             this.setBackground(new Color(0x82B7BD));
         }
 
+        /**
+         * Classe qui représente un bloc de texte
+         */
         class BlocText extends JPanel {
             JLabel text;
 
@@ -125,6 +146,9 @@ public class Vue extends JFrame {
 
     }
 
+    /**
+     * Classe qui représente la grille
+     */
     class Grille extends JPanel {
         Grille() {
             super();
@@ -140,15 +164,20 @@ public class Vue extends JFrame {
         }
     }
 
+    /**
+     * Classe qui représente la barre de log
+     * 
+     */
     class BarreDeLog extends JPanel {
         BarreDeLog() {
             super();
-            this.setLayout(new GridLayout(10,1));
+            this.setLayout(new GridLayout(10, 1));
             this.setBackground(new Color(0xF2A7A1));
-            for (int i = 0; i < 5; i++){
+            for (int i = 0; i < 5; i++) {
                 JLabel label = new JLabel("Un log");
                 label.setOpaque(false);
-                this.add(label);}
+                this.add(label);
+            }
         }
     }
 
