@@ -146,23 +146,7 @@ public class Vue extends JFrame {
 
     }
 
-    /**
-     * Classe qui représente la grille
-     */
-    class Grille extends JPanel {
-        Grille() {
-            super();
-            this.setLayout(new GridLayout(5, 5));
-            this.setBackground(new Color(0x7BB77E));
-            for (int i = 0; i < 5; i++) {
-                for (int j = 0; j < 5; j++) {
-                    JLabel label = new JLabel("case" + i + " " + j);
-                    label.setOpaque(false);
-                    this.add(label);
-                }
-            }
-        }
-    }
+    
 
     /**
      * Classe qui représente la barre de log
