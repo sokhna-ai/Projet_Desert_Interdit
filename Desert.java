@@ -3,9 +3,9 @@ import java.util.Random;
 
 public class Desert {
 
-    private enum Direction { HAUT, DROITE, BAS, GAUCHE }; // enum pour les directions
+    private static enum Direction { HAUT, DROITE, BAS, GAUCHE }; // enum pour les directions
     final static int NB_PIECES = 4;
-    final static String[] PIECES = {"Moteur", "Hélice", "Gouvernail", "Capteur"};
+    public final static String[] PIECES = {"Moteur", "Hélice", "Gouvernail", "Capteur"};
     final static int PAREFEU = 500;
 
     private Zone[][] zones;
