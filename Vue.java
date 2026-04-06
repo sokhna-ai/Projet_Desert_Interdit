@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.util.ArrayList;
 
 public class Vue extends JFrame {
 
@@ -16,9 +17,9 @@ public class Vue extends JFrame {
     /**
      * Constructeur
      */
-    public Vue() {
+    public Vue(Desert desert) {
         super("Desert");
-        desert = new Desert();
+        this.desert = desert;
         initialiserComposants();
     }
 
@@ -98,8 +99,8 @@ public class Vue extends JFrame {
      * 
      * @return
      */
-    private boolean updateOverview() {
-        return true;
+    private void rafraichir() {
+        overview.rafraichir();
     }
 
     /**
@@ -124,6 +125,15 @@ public class Vue extends JFrame {
             this.add(sable);
             this.add(tempete);
             this.setBackground(new Color(0x82B7BD));
+        }
+
+        /**
+         * Mise a jour de l'overview
+         */
+        public void rafraichir() {
+            jour.setText("Jour : " + desert.getTour());
+            sable.setText("Sable : " + desert.getTotalSable());
+            tempete.setText("Tempête : " + desert.getNiveauTempete());
         }
 
         /**
@@ -166,13 +176,31 @@ public class Vue extends JFrame {
     }
 
     class statusBar extends JPanel {
+        ArrayList<affichageJoueur> affichageJoueurs = new ArrayList();
         statusBar() {
             super();
             this.setLayout(new GridLayout(1, 5));
-            for (int i = 0; i < 4; i++)
-                this.add(new JLabel("Player " + i + " Niveau Eau : 0"));
+            for (int i = 0; i < desert.getJoueurs().size(); i++){
+                affichageJoueurs.add(new affichageJoueur(desert.getJoueurs().get(i), i));
+                this.add(affichageJoueurs.get(i));
+            }
         }
-
+        class affichageJoueur extends JPanel {
+            Joueur joueur;
+            int indice;
+            JLabel text;
+            affichageJoueur(Joueur joueur, int indice) {
+                super();
+                text=new JLabel("Player " + indice + " : " +  " Niveau Eau : 0");
+                this.add(text);
+            }
+            void setText(String text) {
+                this.text.setText(text);
+            }
+            void rafraichir() {
+                this.text.setText("Player " + indice + " : " +  " Niveau Eau : " + joueur.getNiveauEau());
+            }
+        }
     }
 
 }
