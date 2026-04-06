@@ -3,7 +3,8 @@ import java.util.Random;
 
 public class Desert {
 
-    private static enum Direction { HAUT, DROITE, BAS, GAUCHE }; // enum pour les directions
+    public static enum Direction { HAUT, DROITE, BAS, GAUCHE } // public pour le Controleur
+
     final static int NB_PIECES = 4;
     public final static String[] PIECES = {"Moteur", "Hélice", "Gouvernail", "Capteur"};
     final static int PAREFEU = 500;
@@ -17,12 +18,14 @@ public class Desert {
     private int actionsRestantes;
     private int xOeil;
     private int yOeil;
+    private int xPiste;
+    private int yPiste;
 
     private Random rand;
 
-    // =========================================================
+    // -----------------------------------------------------------------
     //  CONSTRUCTEUR
-    // =========================================================
+    // -----------------------------------------------------------------
     public Desert() {
         this.joueurs        = new ArrayList<>();
         this.zones          = new Zone[5][5];
@@ -34,41 +37,82 @@ public class Desert {
         this.actionsRestantes = 4;
         this.xOeil = 2;
         this.yOeil = 2;
+        this.xPiste = -1;
+        this.yPiste = -1;
 
-        // On relance l'initialisation tant qu'elle échoue (pare-feu inclus)
         while (!(initialiserZones()
                 && initialiserPieces()
                 && initialiserZonesColonneLigne()
                 && initialiserOasis()
                 && initialiserTunnel()
                 && initialiserPisteEtCrash())) {
-            // réinitialisation complète avant de réessayer
             this.zones = new Zone[5][5];
         }
     }
 
-    // =========================================================
+    // -----------------------------------------------------------------
     //  GETTERS / SETTERS
-    // =========================================================
+    // -----------------------------------------------------------------
+    /**
+     * Retourne la zone aux coordonnées (x, y).
+     */
     public Zone getZone(int x, int y) {
         return this.zones[y][x];
     }
 
+    /**
+     * Retourne le niveau de tempête actuel.
+     */
     public double getNiveauTempete() {
         return this.niveauTempete;
     }
 
+    /**
+     * Retourne le nombre d'actions restantes pour le joueur courant.
+     */
     public int getActionsRestantes() {
         return this.actionsRestantes;
     }
 
+    /**
+     * Retourne la liste de tous les joueurs.
+     */
     public ArrayList<Joueur> getJoueurs() {
         return this.joueurs;
     }
 
-    // =========================================================
+    /**
+     * Retourne le joueur dont c'est le tour.
+     */
+    public Joueur getJoueurCourant() {
+        return this.joueurs.get(joueurCourant);
+    }
+
+    /**
+     * Retourne l'index du joueur courant.
+     */
+    public int getIndexJoueurCourant() {
+        return this.joueurCourant;
+    }
+
+    /**
+     * Retourne la liste de tous les tunnels de la grille.
+     */
+    public ArrayList<Tunnel> getTunnels() {
+        ArrayList<Tunnel> tunnels = new ArrayList<>();
+        for (int i = 0; i < 5; i++)
+            for (int j = 0; j < 5; j++)
+                if (this.zones[i][j] instanceof Tunnel)
+                    tunnels.add((Tunnel) this.zones[i][j]);
+        return tunnels;
+    }
+
+    // -----------------------------------------------------------------
     //  GESTION DES JOUEURS
-    // =========================================================
+    // -----------------------------------------------------------------
+    /**
+     * Ajoute un joueur sur la grille aux coordonnées (x, y).
+     */
     public boolean ajouterJoueur(Joueur j, int x, int y) {
         if (x < 0 || x > 4 || y < 0 || y > 4) return false;
         j.setX(x);
@@ -77,23 +121,39 @@ public class Desert {
         return true;
     }
 
-    // =========================================================
-    //  INITIALISATION DE LA GRILLE
-    // =========================================================
+    /**
+     * Téléporte le joueur courant vers la case (x, y).
+     */
+    public void teleporterJoueur(int x, int y) {
+        Joueur j = joueurs.get(joueurCourant);
+        j.setX(x);
+        j.setY(y);
+        System.out.println(j.getNom() + " est téléporté en (" + x + "," + y + ").");
+    }
 
-    // Étape 1 : remplir toutes les cases avec des Zone_Normale vides + placer l'œil
+    /**
+     * Échange de l'eau entre deux joueurs (le donneur donne 1 au receveur).
+     */
+    public boolean echangerEau(int joueurDonneurIndex, int joueurReceveurIndex) {
+        if (joueurDonneurIndex < 0 || joueurDonneurIndex >= joueurs.size()) return false;
+        if (joueurReceveurIndex < 0 || joueurReceveurIndex >= joueurs.size()) return false;
+        Joueur donneur   = joueurs.get(joueurDonneurIndex);
+        Joueur receveur  = joueurs.get(joueurReceveurIndex);
+        return donneur.echangerEau(receveur);
+    }
+
+    // -----------------------------------------------------------------
+    //  INITIALISATION DE LA GRILLE
+    // -----------------------------------------------------------------
+
     private boolean initialiserZones() {
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 5; j++) {
+        for (int i = 0; i < 5; i++)
+            for (int j = 0; j < 5; j++)
                 this.zones[i][j] = new Zone_Normale(j, i, "");
-            }
-        }
         this.zones[2][2] = new Oeil_Tempête(2, 2);
         return true;
     }
 
-    // Étape 2 : placer les 4 pièces dans des Zone_Normale,
-    //           au plus 1 pièce par ligne ET par colonne
     private boolean initialiserPieces() {
         int x, y;
         for (int i = 0; i < NB_PIECES; i++) {
@@ -115,26 +175,18 @@ public class Desert {
         return true;
     }
 
-    // Étape 3 : pour chaque pièce, placer une Zone_Colonne sur la même ligne
-    //           et une Zone_Ligne sur la même colonne
     private boolean initialiserZonesColonneLigne() {
         int x, y;
         int nbEssais = 0;
-
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 5; j++) {
-                // zones[i][j] : i = ligne (y), j = colonne (x)
                 if (this.zones[i][j] instanceof Zone_Normale
                         && !((Zone_Normale) this.zones[i][j]).getpieceCachee().equals("")) {
-
                     String piece = ((Zone_Normale) this.zones[i][j]).getpieceCachee();
-
-                    // --- Zone_Colonne : même ligne i, colonne x aléatoire ---
                     boolean ok = false;
                     while (!ok) {
                         if (nbEssais++ > PAREFEU) return false;
                         x = rand.nextInt(5);
-                        // la case cible doit être une Zone_Normale vide (pas la pièce elle-même)
                         if (this.zones[i][x] instanceof Zone_Normale
                                 && ((Zone_Normale) this.zones[i][x]).getpieceCachee().equals("")
                                 && x != j) {
@@ -142,8 +194,6 @@ public class Desert {
                             ok = true;
                         }
                     }
-
-                    // --- Zone_Ligne : même colonne j, ligne y aléatoire ---
                     ok = false;
                     while (!ok) {
                         if (nbEssais++ > PAREFEU) return false;
@@ -161,10 +211,8 @@ public class Desert {
         return true;
     }
 
-    // Étape 4 : 2 oasis réelles + 1 mirage
     private boolean initialiserOasis() {
         int x, y;
-        // 2 vraies oasis
         for (int i = 0; i < 2; i++) {
             boolean ok = false;
             int essais = 0;
@@ -179,7 +227,6 @@ public class Desert {
                 }
             }
         }
-        // 1 mirage
         boolean ok = false;
         int essais = 0;
         while (!ok) {
@@ -195,7 +242,6 @@ public class Desert {
         return true;
     }
 
-    // Étape 5 : 3 tunnels
     private boolean initialiserTunnel() {
         int x, y;
         for (int i = 0; i < 3; i++) {
@@ -215,11 +261,8 @@ public class Desert {
         return true;
     }
 
-    // Étape 6 : 1 piste de vol + 1 crash hélicoptère
     private boolean initialiserPisteEtCrash() {
         int x, y;
-
-        // Piste de vol
         boolean ok = false;
         int essais = 0;
         while (!ok) {
@@ -229,11 +272,11 @@ public class Desert {
             if (this.zones[y][x] instanceof Zone_Normale
                     && ((Zone_Normale) this.zones[y][x]).getpieceCachee().equals("")) {
                 this.zones[y][x] = new Piste_Vol(x, y);
+                this.xPiste = x;
+                this.yPiste = y;
                 ok = true;
             }
         }
-
-        // Crash hélicoptère
         ok = false;
         essais = 0;
         while (!ok) {
@@ -249,34 +292,33 @@ public class Desert {
         return true;
     }
 
-    // =========================================================
+    // -----------------------------------------------------------------
     //  HELPERS COMPTAGE
-    // =========================================================
+    // -----------------------------------------------------------------
     private int getNbPieceEnLigne(int ligne) {
         int nb = 0;
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++)
             if (this.zones[ligne][i] instanceof Zone_Normale
-                    && !((Zone_Normale) this.zones[ligne][i]).getpieceCachee().equals("")) {
+                    && !((Zone_Normale) this.zones[ligne][i]).getpieceCachee().equals(""))
                 nb++;
-            }
-        }
         return nb;
     }
 
     private int getNbPieceEnColonne(int col) {
         int nb = 0;
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++)
             if (this.zones[i][col] instanceof Zone_Normale
-                    && !((Zone_Normale) this.zones[i][col]).getpieceCachee().equals("")) {
+                    && !((Zone_Normale) this.zones[i][col]).getpieceCachee().equals(""))
                 nb++;
-            }
-        }
         return nb;
     }
 
-    // =========================================================
+    // -----------------------------------------------------------------
     //  SABLE
-    // =========================================================
+    // -----------------------------------------------------------------
+    /**
+     * Retourne le total de grains de sable sur toute la grille.
+     */
     public int totalSable() {
         int total = 0;
         for (int i = 0; i < 5; i++)
@@ -285,7 +327,9 @@ public class Desert {
         return total;
     }
 
-    /** Retire 1 grain de sable sur la case (x, y) si possible. */
+    /**
+     * Retire 1 grain de sable sur la case (x, y) si possible.
+     */
     public boolean deblayer(int x, int y) {
         Zone z = getZone(x, y);
         if (z.getnbSable() > 0) {
@@ -296,22 +340,24 @@ public class Desert {
         return false;
     }
 
-    /** Donne de l'eau à tous les joueurs présents sur la case (x, y). */
+    /**
+     * Donne de l'eau à tous les joueurs présents sur la case (x, y).
+     */
     public void distribuerEau(int x, int y, int quantite) {
         for (Joueur j : joueurs) {
             if (j.getX() == x && j.getY() == y) {
-                int nvEau = Math.min(j.getNiveauEau() + quantite, 5); // max 5 selon le sujet
+                int nvEau = Math.min(j.getNiveauEau() + quantite, 5);
                 j.setNiveauEau(nvEau);
             }
         }
     }
 
-    // =========================================================
+    // -----------------------------------------------------------------
     //  TEMPÊTE
-    // =========================================================
+    // -----------------------------------------------------------------
     private void soufflerVent() {
-        int tirage    = rand.nextInt(4);
-        int distance  = rand.nextInt(2) + 1;
+        int tirage   = rand.nextInt(4);
+        int distance = rand.nextInt(2) + 1;
         Direction dir = Direction.values()[tirage];
         Zone zone;
 
@@ -321,10 +367,7 @@ public class Desert {
                     if (this.yOeil != 0) {
                         this.yOeil--;
                         zone = getZone(this.xOeil, this.yOeil);
-                        if (zone.getnbSable() < 2) {
-                            zone.setNbSable(zone.getnbSable() + 1);
-                            this.totalSable++;
-                        }
+                        if (zone.getnbSable() < 2) { zone.setNbSable(zone.getnbSable() + 1); this.totalSable++; }
                     }
                 }
                 break;
@@ -333,10 +376,7 @@ public class Desert {
                     if (this.yOeil != 4) {
                         this.yOeil++;
                         zone = getZone(this.xOeil, this.yOeil);
-                        if (zone.getnbSable() < 2) {
-                            zone.setNbSable(zone.getnbSable() + 1);
-                            this.totalSable++;
-                        }
+                        if (zone.getnbSable() < 2) { zone.setNbSable(zone.getnbSable() + 1); this.totalSable++; }
                     }
                 }
                 break;
@@ -345,10 +385,7 @@ public class Desert {
                     if (this.xOeil != 4) {
                         this.xOeil++;
                         zone = getZone(this.xOeil, this.yOeil);
-                        if (zone.getnbSable() < 2) {
-                            zone.setNbSable(zone.getnbSable() + 1);
-                            this.totalSable++;
-                        }
+                        if (zone.getnbSable() < 2) { zone.setNbSable(zone.getnbSable() + 1); this.totalSable++; }
                     }
                 }
                 break;
@@ -357,92 +394,73 @@ public class Desert {
                     if (this.xOeil != 0) {
                         this.xOeil--;
                         zone = getZone(this.xOeil, this.yOeil);
-                        if (zone.getnbSable() < 2) {
-                            zone.setNbSable(zone.getnbSable() + 1);
-                            this.totalSable++;
-                        }
+                        if (zone.getnbSable() < 2) { zone.setNbSable(zone.getnbSable() + 1); this.totalSable++; }
                     }
                 }
                 break;
         }
     }
 
-    /** Vague de chaleur : chaque joueur perd 1 unité d'eau. */
     private void vagueDeChaleur() {
-        for (Joueur j : joueurs) {
+        for (Joueur j : joueurs)
             j.setNiveauEau(Math.max(0, j.getNiveauEau() - 1));
-        }
         System.out.println("Vague de chaleur ! Chaque joueur perd 1 eau.");
     }
 
-    /** La tempête se déchaîne : le niveau monte de 0.5. */
     private void tempeteSeDechaine() {
         this.niveauTempete += 0.5;
         System.out.println("La tempête se déchaîne ! Niveau tempête : " + this.niveauTempete);
     }
 
-    // =========================================================
+    // -----------------------------------------------------------------
     //  FIN DE TOUR
-    // =========================================================
-    private void finDeTour() {
-        // Pioche une carte tempête selon le niveau
-        int tirage = rand.nextInt(6); // simplifié : à adapter avec un vrai deck
-        if (tirage < 2) {
-            soufflerVent();
-        } else if (tirage < 4) {
-            vagueDeChaleur();
-        } else {
-            tempeteSeDechaine();
-        }
-        // Passage au joueur suivant
+    // -----------------------------------------------------------------
+    /**
+     * Passe au joueur suivant et déclenche un événement tempête.
+     */
+    public void finDeTour() {
+        int tirage = rand.nextInt(6);
+        if (tirage < 2)      soufflerVent();
+        else if (tirage < 4) vagueDeChaleur();
+        else                 tempeteSeDechaine();
+
         joueurCourant = (joueurCourant + 1) % joueurs.size();
         actionsRestantes = 4;
     }
 
-    // =========================================================
+    // -----------------------------------------------------------------
     //  CONDITIONS DE FIN
-    // =========================================================
-    private boolean estVicoire() {
+    // -----------------------------------------------------------------
+    private boolean estVictoire() {
         if (nbPiecesRamasses < NB_PIECES) return false;
-        // Tous les joueurs doivent être sur la piste de vol
         for (Joueur j : joueurs) {
             Zone z = getZone(j.getX(), j.getY());
             if (!(z instanceof Piste_Vol)) return false;
+            if (z.estBloquee()) return false; // piste doit être désensablée
         }
         return true;
     }
 
-    private boolean estEnsable() {
-        // Défaite si le total de sable dépasse 43 (règle officielle du sujet)
-        return totalSable() > 43;
+    /**
+     * Retourne l'état actuel de la partie :
+     * "VICTOIRE", "DEFAITE_SOIF", "DEFAITE_SABLE", "DEFAITE_TEMPETE" ou "EN_COURS".
+     */
+    public String etatPartie() {
+        if (estVictoire()) return "VICTOIRE";
+        for (Joueur j : joueurs)
+            if (j.getNiveauEau() <= 0) return "DEFAITE_SOIF";
+        if (totalSable() > 43) return "DEFAITE_SABLE";
+        if (this.niveauTempete >= 7) return "DEFAITE_TEMPETE";
+        return "EN_COURS";
     }
 
-    private boolean estDefaite() {
-        // Défaite si un joueur n'a plus d'eau
-        for (Joueur j : joueurs) {
-            if (j.getNiveauEau() <= 0) {
-                System.out.println(j.getNom() + " est mort de soif !");
-                return true;
-            }
-        }
-        // Défaite si trop de sable (> 43)
-        if (estEnsable()) {
-            System.out.println("Le désert est trop ensablé !");
-            return true;
-        }
-        // Défaite si niveau tempête >= 7
-        if (this.niveauTempete >= 7) {
-            System.out.println("La tempête est trop puissante !");
-            return true;
-        }
-        return false;
-    }
-
-    // =========================================================
+    // -----------------------------------------------------------------
     //  ACTIONS D'UN JOUEUR
-    // =========================================================
+    // -----------------------------------------------------------------
 
-    /** Déplace le joueur courant dans une direction si la case n'est pas bloquée. */
+    /**
+     * Déplace le joueur courant dans la direction donnée.
+     */
     public boolean deplacerJoueur(Direction dir) {
         Joueur j = joueurs.get(joueurCourant);
         int nx = j.getX();
@@ -471,11 +489,12 @@ public class Desert {
         return true;
     }
 
-    /** Le joueur courant fouille la case sur laquelle il se trouve. */
+    /**
+     * Le joueur courant fouille la case sur laquelle il se trouve.
+     */
     public void fouillerCase() {
         Joueur j = joueurs.get(joueurCourant);
         Zone z = getZone(j.getX(), j.getY());
-
         if (!z.getExploree()) {
             z.setExploree(true);
             z.actionSpeciale(this);
@@ -485,7 +504,9 @@ public class Desert {
         actionsRestantes--;
     }
 
-    /** Le joueur courant déblaye 1 grain de sable sur sa case. */
+    /**
+     * Le joueur courant déblaye 1 grain de sable sur sa case.
+     */
     public void deblayerCase() {
         Joueur j = joueurs.get(joueurCourant);
         deblayer(j.getX(), j.getY());
@@ -493,9 +514,43 @@ public class Desert {
         System.out.println(j.getNom() + " déblaye sa case.");
     }
 
-    // =========================================================
+    /**
+     * Le joueur courant ramasse la pièce sur sa case si les conditions sont remplies.
+     * La case doit être une Zone_Normale, explorée, avec une pièce, et non bloquée.
+     */
+    public boolean ramasserPiece() {
+        Joueur j = joueurs.get(joueurCourant);
+        Zone z = getZone(j.getX(), j.getY());
+
+        if (!(z instanceof Zone_Normale)) {
+            System.out.println("Pas de pièce à ramasser ici.");
+            return false;
+        }
+        Zone_Normale zn = (Zone_Normale) z;
+        if (!zn.getExploree()) {
+            System.out.println("La case n'a pas encore été fouillée.");
+            return false;
+        }
+        if (zn.getpieceCachee().equals("")) {
+            System.out.println("Il n'y a pas de pièce sur cette case.");
+            return false;
+        }
+        // Ramasser la pièce
+        String piece = zn.getpieceCachee();
+        j.ajouterPiece(piece);
+        zn.setpieceCachee(""); // la pièce n'est plus sur la case
+        nbPiecesRamasses++;
+        actionsRestantes--;
+        System.out.println(j.getNom() + " ramasse la pièce : " + piece);
+        return true;
+    }
+
+    // -----------------------------------------------------------------
     //  AFFICHAGE
-    // =========================================================
+    // -----------------------------------------------------------------
+    /**
+     * Affiche la grille dans la console (debug).
+     */
     public void afficherGrille() {
         System.out.println("  0  1  2  3  4");
         for (int i = 0; i < 5; i++) {
@@ -503,19 +558,15 @@ public class Desert {
             for (int j = 0; j < 5; j++) {
                 Zone z = this.zones[i][j];
                 String s = z.getSymbole();
-                // Marquer les joueurs présents
-                boolean joueurIci = false;
-                for (Joueur jj : joueurs) {
-                    if (jj.getX() == j && jj.getY() == i) { joueurIci = true; break; }
-                }
-                if (joueurIci) s = "J";
-                // Ajouter le nombre de sable
+                for (Joueur jj : joueurs)
+                    if (jj.getX() == j && jj.getY() == i) { s = "J"; break; }
                 System.out.print("[" + s + z.getnbSable() + "]");
             }
             System.out.println();
         }
         System.out.println("Sable total : " + totalSable()
                 + " | Niveau tempête : " + this.niveauTempete
-                + " | Actions restantes : " + actionsRestantes);
+                + " | Actions restantes : " + actionsRestantes
+                + " | État : " + etatPartie());
     }
 }
