@@ -13,6 +13,7 @@ public class Desert {
     private ArrayList<Joueur> joueurs;
     private double niveauTempete;
     private int totalSable;
+    private int tour;
     private int nbPiecesRamasses;
     private int joueurCourant;
     private int actionsRestantes;
@@ -105,6 +106,19 @@ public class Desert {
                 if (this.zones[i][j] instanceof Tunnel)
                     tunnels.add((Tunnel) this.zones[i][j]);
         return tunnels;
+    }
+
+    /**
+     * Retourne le nombre total de sable de la grille.
+     */
+    public int getTotalSable() {
+        return this.totalSable();
+    }
+    /**
+     * Retourne le nombre de tours passés depuis le commencement de la partie.
+     */
+    public int getTour() {
+        return this.tour;
     }
 
     // -----------------------------------------------------------------
