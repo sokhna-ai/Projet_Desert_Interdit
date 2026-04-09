@@ -1,6 +1,7 @@
-public class main {
+public class Main {
     public static void main (String[] args) {
-        Vue vue = new Vue();
+        Desert desert = new Desert();
+        Vue vue = new Vue(desert);
         vue.setSize(1280, 720);
         vue.setVisible(true);
     }
