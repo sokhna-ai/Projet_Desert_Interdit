@@ -61,8 +61,9 @@ public class Vue extends JFrame {
         c.weighty = 4.0;
         c.gridx = 0;
         c.gridy = 1;
-        JPanel grille = new Grille();
+        JPanel grille = new Grille(desert);
         this.add(grille, c);
+        System.out.println("test!!! 1time");
 
         c.weightx = 2.0;
         c.gridx = 1;
@@ -176,7 +177,7 @@ public class Vue extends JFrame {
     }
 
     class statusBar extends JPanel {
-        ArrayList<affichageJoueur> affichageJoueurs = new ArrayList();
+        ArrayList<affichageJoueur> affichageJoueurs = new ArrayList<>();
         statusBar() {
             super();
             this.setLayout(new GridLayout(1, 5));
