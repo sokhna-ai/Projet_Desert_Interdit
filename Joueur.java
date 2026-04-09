@@ -1,8 +1,11 @@
+import java.util.ArrayList;
+
 public class Joueur {
     private int niveauEau;
     private String nom;
     private int x;
     private int y;
+    private ArrayList<String> pieces = new ArrayList<>();
 
     public Joueur(int niveauEau, int x, int y) {
         this.niveauEau = niveauEau;
@@ -14,7 +17,7 @@ public class Joueur {
         return niveauEau;
     }
     public boolean setNiveauEau(int niveauEau) {
-        if(niveauEau>4||niveauEau<0){
+        if(niveauEau>5||niveauEau<0){
             return false;
         }
         this.niveauEau = niveauEau;
@@ -45,6 +48,14 @@ public class Joueur {
     }
     public void setNom(String name){
         this.nom = name;
+    }
+
+    public void ajouterPiece(String piece) {
+        this.pieces.add(piece);
+    }
+
+    public ArrayList<String> getPieces() {
+        return this.pieces;
     }
 
     /**
