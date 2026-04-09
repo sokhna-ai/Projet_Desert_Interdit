@@ -99,7 +99,7 @@ public class Vue extends JFrame {
      * 
      * @return
      */
-    private void rafraichir() {
+    public void rafraichir() {
         overview.rafraichir();
     }
 
