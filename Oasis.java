@@ -20,7 +20,7 @@ public class Oasis extends Zone{
                 System.out.println("C'est un mirage... l'oasis est à sec !");
             } else {
                 System.out.println("Tous les joueurs sur cette case gagnent 2 rations.");
-                //on doit ajouter une methode (public void donnerEauCase(int x, int y, int quantite) dans desert)
+                d.distribuerEau(this.x, this.y, 2);
             }
         }
     }
