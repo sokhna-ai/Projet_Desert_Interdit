@@ -7,6 +7,8 @@ public class Desert {
 
     final static int NB_PIECES = 4;
     public final static String[] PIECES = {"Moteur", "Hélice", "Gouvernail", "Capteur"};
+    public static ArrayList<Piece> pieces;
+    
     final static int PAREFEU = 500;
 
     private Zone[][] zones;
@@ -44,7 +46,7 @@ public class Desert {
         this.yPiste = -1;
         this.xCrash = -1;
         this.yCrash = -1;
-
+        
         while (!(initialiserZones()
                 && initialiserPieces()
                 && initialiserZonesColonneLigne()
@@ -186,6 +188,7 @@ public class Desert {
 
     private boolean initialiserPieces() {
         int x, y;
+        Desert.pieces=new ArrayList<>();
         for (int i = 0; i < NB_PIECES; i++) {
             boolean ok = false;
             int essais = 0;
@@ -196,7 +199,10 @@ public class Desert {
                 if (this.zones[y][x] instanceof Zone_Normale
                         && ((Zone_Normale) this.zones[y][x]).getpieceCachee().equals("")
                         && getNbPieceEnLigne(y) < 1
-                        && getNbPieceEnColonne(x) < 1) {
+                        && getNbPieceEnColonne(x) < 1) 
+                        {
+                            Piece piece = new Piece(x, y, PIECES[i]);
+                            pieces.add(piece);
                     ((Zone_Normale) this.zones[y][x]).setpieceCachee(PIECES[i]);
                     ok = true;
                 }
