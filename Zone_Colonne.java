@@ -1,10 +1,10 @@
 public class Zone_Colonne extends Zone{
     protected int numeroColonne;
-    protected String pieceReference;
-    public Zone_Colonne(int x, int y, int nc, String pr){
+    protected Piece pieceReference;
+    public Zone_Colonne(int x, int y,  Piece piece){
         super(x,y);
-        this.pieceReference = pr;
-        this.numeroColonne = nc;
+        this.pieceReference = piece;
+        numeroColonne=piece.getX();
     }
     public int getNumeroColonne(){
         return this.numeroColonne;
@@ -13,16 +13,14 @@ public class Zone_Colonne extends Zone{
         this.numeroColonne = n;
     }
     public String getpieceReference(){
-        return this.pieceReference;
+        return this.pieceReference.getPiece();
     }
-    public void setpieceReference(String p){
-        this.pieceReference = p;
-    }
+    
     @Override
     public String getSymbole(){
         return "C";
     }
     public void actionSpeciale(Desert d) {
-        System.out.println(this.pieceReference + " est sur la Colonne " + this.numeroColonne);
+        System.out.println(this.pieceReference.getPiece() + " est sur la Colonne " + this.numeroColonne);
     }
 }

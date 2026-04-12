@@ -214,33 +214,28 @@ public class Desert {
     private boolean initialiserZonesColonneLigne() {
         int x, y;
         int nbEssais = 0;
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 5; j++) {
-                if (this.zones[i][j] instanceof Zone_Normale
-                        && !((Zone_Normale) this.zones[i][j]).getpieceCachee().equals("")) {
-                    String piece = ((Zone_Normale) this.zones[i][j]).getpieceCachee();
-                    boolean ok = false;
-                    while (!ok) {
-                        if (nbEssais++ > PAREFEU) return false;
-                        x = rand.nextInt(5);
-                        if (this.zones[i][x] instanceof Zone_Normale
-                                && ((Zone_Normale) this.zones[i][x]).getpieceCachee().equals("")
-                                && x != j) {
-                            this.zones[i][x] = new Zone_Colonne(x, i, j, piece);
-                            ok = true;
-                        }
-                    }
-                    ok = false;
-                    while (!ok) {
-                        if (nbEssais++ > PAREFEU) return false;
-                        y = rand.nextInt(5);
-                        if (this.zones[y][j] instanceof Zone_Normale
-                                && ((Zone_Normale) this.zones[y][j]).getpieceCachee().equals("")
-                                && y != i) {
-                            this.zones[y][j] = new Zone_Ligne(j, y, i, piece);
-                            ok = true;
-                        }
-                    }
+        boolean ok = false;
+        for(Piece piece : pieces) {
+            ok = false;
+            while (!ok) {
+                if (nbEssais++ > PAREFEU) return false;
+                x = rand.nextInt(5);
+                y = rand.nextInt(5);
+                if (this.zones[y][x] instanceof Zone_Normale
+                        && ((Zone_Normale) this.zones[y][x]).getpieceCachee().equals("")) {
+                    this.zones[y][x] = new Zone_Ligne(x, y,  piece);
+                    ok = true;
+                }
+            }
+            ok = false;
+            while (!ok) {
+                if (nbEssais++ > PAREFEU) return false;
+                x = rand.nextInt(5);
+                y = rand.nextInt(5);
+                if (this.zones[y][x] instanceof Zone_Normale
+                        && ((Zone_Normale) this.zones[y][x]).getpieceCachee().equals("")) {
+                    this.zones[y][x] = new Zone_Colonne(x, y,  piece);
+                    ok = true;
                 }
             }
         }
