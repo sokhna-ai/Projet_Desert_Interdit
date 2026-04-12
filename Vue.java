@@ -85,7 +85,12 @@ public class Vue extends JFrame {
         grille = new Grille(desert);
         JPanel centreWrapper = new JPanel(new GridBagLayout());
         centreWrapper.setBackground(BG_DARK);
-        centreWrapper.add(grille);
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1.0;
+        c.weighty = 1.0;
+
+        centreWrapper.add(grille,c);
         add(centreWrapper, BorderLayout.CENTER);
 
         // EST : log + actions
