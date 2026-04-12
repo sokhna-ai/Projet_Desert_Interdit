@@ -21,6 +21,8 @@ public class Desert {
     private int yOeil;
     private int xPiste;
     private int yPiste;
+    private int xCrash;
+    private int yCrash;
 
     private Random rand;
 
@@ -31,7 +33,7 @@ public class Desert {
         this.joueurs        = new ArrayList<>();
         this.zones          = new Zone[5][5];
         this.rand           = new Random();
-        this.niveauTempete  = 0.0;
+        this.niveauTempete  = 2.0;
         this.totalSable     = 0;
         this.nbPiecesRamasses = 0;
         this.joueurCourant  = 0;
@@ -40,6 +42,8 @@ public class Desert {
         this.yOeil = 2;
         this.xPiste = -1;
         this.yPiste = -1;
+        this.xCrash = -1;
+        this.yCrash = -1;
 
         while (!(initialiserZones()
                 && initialiserPieces()
@@ -121,6 +125,18 @@ public class Desert {
         return this.tour;
     }
 
+
+    /**
+     * Retourne la coordonnée X de la zone Crash_Helicoptere.
+     */
+    public int getXOeil() { return this.xOeil; }
+    public int getYOeil() { return this.yOeil; }
+    public int getXCrash() { return this.xCrash; }
+
+    /**
+     * Retourne la coordonnée Y de la zone Crash_Helicoptere.
+     */
+    public int getYCrash() { return this.yCrash; }
     // -----------------------------------------------------------------
     //  GESTION DES JOUEURS
     // -----------------------------------------------------------------
@@ -164,7 +180,7 @@ public class Desert {
         for (int i = 0; i < 5; i++)
             for (int j = 0; j < 5; j++)
                 this.zones[i][j] = new Zone_Normale(j, i, "");
-        this.zones[2][2] = new Oeil_Tempête(2, 2);
+        this.zones[2][2] = new Oeil_Tempete(2, 2);
         return true;
     }
 
@@ -300,6 +316,8 @@ public class Desert {
             if (this.zones[y][x] instanceof Zone_Normale
                     && ((Zone_Normale) this.zones[y][x]).getpieceCachee().equals("")) {
                 this.zones[y][x] = new Crash_Helicoptere(x, y);
+                this.xCrash = x;
+                this.yCrash = y;
                 ok = true;
             }
         }
@@ -381,7 +399,7 @@ public class Desert {
                     if (this.yOeil != 0) {
                         this.yOeil--;
                         zone = getZone(this.xOeil, this.yOeil);
-                        if (zone.getnbSable() < 2) { zone.setNbSable(zone.getnbSable() + 1); this.totalSable++; }
+                        zone.setNbSable(zone.getnbSable() + 1); this.totalSable++;
                     }
                 }
                 break;
@@ -390,7 +408,7 @@ public class Desert {
                     if (this.yOeil != 4) {
                         this.yOeil++;
                         zone = getZone(this.xOeil, this.yOeil);
-                        if (zone.getnbSable() < 2) { zone.setNbSable(zone.getnbSable() + 1); this.totalSable++; }
+                        zone.setNbSable(zone.getnbSable() + 1); this.totalSable++;
                     }
                 }
                 break;
@@ -399,7 +417,7 @@ public class Desert {
                     if (this.xOeil != 4) {
                         this.xOeil++;
                         zone = getZone(this.xOeil, this.yOeil);
-                        if (zone.getnbSable() < 2) { zone.setNbSable(zone.getnbSable() + 1); this.totalSable++; }
+                        zone.setNbSable(zone.getnbSable() + 1); this.totalSable++;
                     }
                 }
                 break;
@@ -408,7 +426,7 @@ public class Desert {
                     if (this.xOeil != 0) {
                         this.xOeil--;
                         zone = getZone(this.xOeil, this.yOeil);
-                        if (zone.getnbSable() < 2) { zone.setNbSable(zone.getnbSable() + 1); this.totalSable++; }
+                        zone.setNbSable(zone.getnbSable() + 1); this.totalSable++;
                     }
                 }
                 break;
@@ -416,9 +434,15 @@ public class Desert {
     }
 
     private void vagueDeChaleur() {
-        for (Joueur j : joueurs)
-            j.setNiveauEau(Math.max(0, j.getNiveauEau() - 1));
-        System.out.println("Vague de chaleur ! Chaque joueur perd 1 eau.");
+        for (Joueur j : joueurs) {
+            Zone zj = getZone(j.getX(), j.getY());
+            if (zj instanceof Tunnel) {
+                System.out.println(j.getNom() + " est dans un tunnel, protege de la chaleur.");
+            } else {
+                j.setNiveauEau(Math.max(0, j.getNiveauEau() - 1));
+            }
+        }
+        System.out.println("Vague de chaleur ! Les joueurs hors tunnel perdent 1 eau.");
     }
 
     private void tempeteSeDechaine() {
@@ -433,11 +457,16 @@ public class Desert {
      * Passe au joueur suivant et déclenche un événement tempête.
      */
     public void finDeTour() {
-        int tirage = rand.nextInt(6);
-        if (tirage < 2)      soufflerVent();
-        else if (tirage < 4) vagueDeChaleur();
-        else                 tempeteSeDechaine();
-
+        // +0.5 garanti à chaque fin de tour
+        // puis events aléatoires : vent ou chaleur, nombre = floor(niveauTempete), min 2
+        tempeteSeDechaine();
+        int nbActions = Math.max(2, (int) this.niveauTempete);
+        for (int a = 0; a < nbActions; a++) {
+            int tirage = rand.nextInt(6);
+            if (tirage < 2) soufflerVent();
+            else            vagueDeChaleur();
+        }
+        tour++;
         joueurCourant = (joueurCourant + 1) % joueurs.size();
         actionsRestantes = 4;
     }
@@ -471,6 +500,27 @@ public class Desert {
     // -----------------------------------------------------------------
     //  ACTIONS D'UN JOUEUR
     // -----------------------------------------------------------------
+
+    /**
+     * Le joueur courant donne 1 unite d eau a un autre joueur sur la meme case.
+     * L echange ne coute pas d action (conforme aux regles).
+     * @param indexReceveur index du joueur receveur dans la liste
+     * @return true si l echange a pu se faire
+     */
+    public boolean donnerEau(int indexReceveur) {
+        if (indexReceveur < 0 || indexReceveur >= joueurs.size()) return false;
+        Joueur donneur  = joueurs.get(joueurCourant);
+        Joueur receveur = joueurs.get(indexReceveur);
+        // Les deux joueurs doivent etre sur la meme case
+        if (donneur.getX() != receveur.getX() || donneur.getY() != receveur.getY()) {
+            System.out.println("Echange impossible : les joueurs ne sont pas sur la meme case.");
+            return false;
+        }
+        boolean ok = donneur.echangerEau(receveur);
+        if (ok) System.out.println(donneur.getNom() + " donne 1 eau a " + receveur.getNom());
+        return ok;
+        // Pas de actionsRestantes-- : l echange ne coute pas d action
+    }
 
     /**
      * Déplace le joueur courant dans la direction donnée.
@@ -509,11 +559,16 @@ public class Desert {
     public void fouillerCase() {
         Joueur j = joueurs.get(joueurCourant);
         Zone z = getZone(j.getX(), j.getY());
+        if (z.getnbSable() > 0) {
+            System.out.println("Impossible de fouiller : il y a du sable sur cette case. Deblaie d abord !");
+            // On ne consomme pas d action (echec)
+            return;
+        }
         if (!z.getExploree()) {
             z.setExploree(true);
             z.actionSpeciale(this);
         } else {
-            System.out.println("Cette case a déjà été fouillée.");
+            System.out.println("Cette case a deja ete fouillee.");
         }
         actionsRestantes--;
     }
@@ -584,3 +639,4 @@ public class Desert {
                 + " | État : " + etatPartie());
     }
 }
+

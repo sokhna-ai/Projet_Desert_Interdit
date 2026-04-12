@@ -73,7 +73,7 @@ public class Joueur {
      */
     public boolean echangerEau(Joueur j) {
         if (this.niveauEau>0) {
-            if (j.niveauEau<2) {
+            if (j.niveauEau < 5) {
                 j.niveauEau++;
                 this.niveauEau--;
                 return true;

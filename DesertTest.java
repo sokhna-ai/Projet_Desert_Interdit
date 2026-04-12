@@ -1,105 +1,140 @@
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * Tests JUnit pour la classe Desert.
- * Couvre les 5 cas demandés dans le sujet.
+ * Couvre : déplacement, cases bloquées, états de fin de partie.
  */
 public class DesertTest {
 
     private Desert desert;
-    private Joueur joueur;
+    private Joueur alice;
+    private Joueur bob;
 
-    @BeforeEach
+    /** Initialisation avant chaque test : on crée un désert et deux joueurs. */
+    @Before
     public void setUp() {
         desert = new Desert();
-        joueur = new Joueur(3, 0, 0);
-        joueur.setNom("TestJoueur");
-        desert.ajouterJoueur(joueur, 0, 0);
+        alice = new Joueur(5, 0, 0);
+        alice.setNom("Alice");
+        bob = new Joueur(5, 4, 4);
+        bob.setNom("Bob");
+        desert.ajouterJoueur(alice, 0, 0);
+        desert.ajouterJoueur(bob, 4, 4);
     }
 
     // ------------------------------------------------------------------
-    // Test 1 : déplacer un joueur sur une case valide → vérifier nouvelles coordonnées
+    // Test 1 : déplacer un joueur sur une case valide
     // ------------------------------------------------------------------
     @Test
-    public void testDeplacerJoueurCaseValide() {
-        // Vérifier que la case en bas (0,1) est libre de sable
-        desert.getZone(0, 1).setNbSable(0);
-
-        boolean resultat = desert.deplacerJoueur(Desert.Direction.BAS);
-
-        assertTrue(resultat, "Le déplacement vers le bas doit réussir.");
-        assertEquals(0, joueur.getX(), "X du joueur doit être 0.");
-        assertEquals(1, joueur.getY(), "Y du joueur doit être 1.");
+    public void testDeplacementValide() {
+        // Alice est en (0,0), on la déplace à droite → elle doit être en (1,0)
+        // On s'assure d'abord que la case (1,0) n'est pas bloquée
+        desert.getZone(1, 0).setNbSable(0); // garantir qu'elle n'est pas bloquée
+        boolean ok = desert.deplacerJoueur(Desert.Direction.DROITE);
+        assertTrue("Le déplacement valide doit réussir", ok);
+        assertEquals("Alice doit être en x=1", 1, alice.getX());
+        assertEquals("Alice doit rester en y=0", 0, alice.getY());
     }
 
     // ------------------------------------------------------------------
-    // Test 2 : déplacer sur une case bloquée → vérifier que ça échoue
+    // Test 2 : déplacer vers une case bloquée → échec
     // ------------------------------------------------------------------
     @Test
-    public void testDeplacerJoueurCaseBloquee() {
-        // Bloquer la case (0,1) avec 2 grains de sable
-        desert.getZone(0, 1).setNbSable(2);
-
-        boolean resultat = desert.deplacerJoueur(Desert.Direction.BAS);
-
-        assertFalse(resultat, "Le déplacement vers une case bloquée doit échouer.");
-        assertEquals(0, joueur.getX(), "X du joueur ne doit pas changer.");
-        assertEquals(0, joueur.getY(), "Y du joueur ne doit pas changer.");
+    public void testDeplacementCaseBloquee() {
+        // On bloque la case (1,0) avec 2 grains de sable
+        desert.getZone(1, 0).setNbSable(2);
+        boolean ok = desert.deplacerJoueur(Desert.Direction.DROITE);
+        assertFalse("Le déplacement vers une case bloquée doit échouer", ok);
+        assertEquals("Alice ne doit pas avoir bougé (x)", 0, alice.getX());
+        assertEquals("Alice ne doit pas avoir bougé (y)", 0, alice.getY());
     }
 
     // ------------------------------------------------------------------
-    // Test 3 : mettre le sable à 44 → vérifier "DEFAITE_SABLE"
+    // Test 3 : sable > 43 → DEFAITE_SABLE
     // ------------------------------------------------------------------
     @Test
     public void testDefaiteSable() {
-        // Répartir 44 grains sur la grille (9 cases × 4 + 8 cases × 1 = 44)
-        int sableAjoute = 0;
+        // On force le sable sur plusieurs cases pour dépasser 43
+        int pose = 0;
         outer:
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 5; j++) {
-                Zone z = desert.getZone(j, i);
-                // On peut forcer en-dessous du max visuel : on force à 2 sur plusieurs cases
-                int ajout = Math.min(2, 44 - sableAjoute);
-                z.setNbSable(ajout);
-                sableAjoute += ajout;
-                if (sableAjoute >= 44) break outer;
+        for (int y = 0; y < 5; y++) {
+            for (int x = 0; x < 5; x++) {
+                Zone z = desert.getZone(x, y);
+                if (!(z instanceof Oeil_Tempete)) {
+                    z.setNbSable(2);
+                    pose += 2;
+                    if (pose > 43) break outer;
+                }
             }
         }
-
-        assertEquals("DEFAITE_SABLE", desert.etatPartie(),
-                "Avec 44 grains de sable, l'état doit être DEFAITE_SABLE.");
+        assertEquals("Avec plus de 43 sables, la partie est perdue par ensablement",
+                "DEFAITE_SABLE", desert.etatPartie());
     }
 
     // ------------------------------------------------------------------
-    // Test 4 : mettre le niveau tempête à 7 → vérifier "DEFAITE_TEMPETE"
+    // Test 4 : niveau tempête ≥ 7 → DEFAITE_TEMPETE
     // ------------------------------------------------------------------
     @Test
     public void testDefaiteTempete() {
-        // Forcer le niveau tempête à 7 via des setters indirects :
-        // on appelle 14 fois tempeteSeDechaine via finDeTour (trop aléatoire),
-        // donc on utilise la réflexion pour accéder au champ privé.
+        // On accède au niveau tempête via réflexion ou on force via finDeTour
+        // Méthode directe : forcer le champ (package-private trick via setter non fourni)
+        // → On utilise finDeTour() en boucle pour monter la tempête
+        // Mais c'est non-déterministe. On préfère vérifier l'état via accès direct au champ.
+        // Comme le champ est privé, on utilise java.lang.reflect uniquement pour le test.
         try {
             java.lang.reflect.Field f = Desert.class.getDeclaredField("niveauTempete");
             f.setAccessible(true);
             f.set(desert, 7.0);
         } catch (Exception e) {
-            fail("Impossible d'accéder au champ niveauTempete : " + e.getMessage());
+            fail("Impossible d'accéder à niveauTempete : " + e.getMessage());
         }
-
-        assertEquals("DEFAITE_TEMPETE", desert.etatPartie(),
-                "Avec niveauTempete = 7, l'état doit être DEFAITE_TEMPETE.");
+        assertEquals("Niveau tempête ≥ 7 → DEFAITE_TEMPETE",
+                "DEFAITE_TEMPETE", desert.etatPartie());
     }
 
     // ------------------------------------------------------------------
-    // Test 5 : mettre l'eau d'un joueur à 0 → vérifier "DEFAITE_SOIF"
+    // Test 5 : eau d'un joueur à 0 → DEFAITE_SOIF
     // ------------------------------------------------------------------
     @Test
     public void testDefaiteSoif() {
-        joueur.setNiveauEau(0);
+        alice.setNiveauEau(0);
+        assertEquals("Joueur sans eau → DEFAITE_SOIF",
+                "DEFAITE_SOIF", desert.etatPartie());
+    }
 
-        assertEquals("DEFAITE_SOIF", desert.etatPartie(),
-                "Avec un joueur à 0 eau, l'état doit être DEFAITE_SOIF.");
+    // ------------------------------------------------------------------
+    // Test bonus : etatPartie renvoie EN_COURS au démarrage
+    // ------------------------------------------------------------------
+    @Test
+    public void testEtatInitialEnCours() {
+        assertEquals("Au démarrage la partie est EN_COURS",
+                "EN_COURS", desert.etatPartie());
+    }
+
+    // ------------------------------------------------------------------
+    // Test bonus : déblayage de sable
+    // ------------------------------------------------------------------
+    @Test
+    public void testDeblayage() {
+        desert.getZone(0, 0).setNbSable(1);
+        boolean ok = desert.deblayer(0, 0);
+        assertTrue("Déblayage d'une case avec sable doit réussir", ok);
+        assertEquals("Après déblayage, la case doit avoir 0 sable",
+                0, desert.getZone(0, 0).getnbSable());
+    }
+
+    // ------------------------------------------------------------------
+    // Test bonus : fouiller une zone normale explorée
+    // ------------------------------------------------------------------
+    @Test
+    public void testFouillerCase() {
+        // Alice est en (0,0), on fouille
+        assertFalse("La case ne doit pas être explorée avant fouille",
+                desert.getZone(0, 0).getExploree());
+        desert.fouillerCase();
+        assertTrue("La case doit être explorée après fouille",
+                desert.getZone(0, 0).getExploree());
     }
 }
