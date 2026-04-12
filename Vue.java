@@ -10,18 +10,18 @@ import java.util.ArrayList;
 public class Vue extends JFrame {
 
     // Palette globale
-    static final Color BG_DARK       = new Color(0x2B1E0E);
-    static final Color BG_MID        = new Color(0x3B2B14);
-    static final Color BG_PANEL      = new Color(0x1A1008);
-    static final Color GOLD          = new Color(0xC8972A);
-    static final Color GOLD_LIGHT    = new Color(0xF5C842);
-    static final Color TEXT_MAIN     = new Color(0xEEDDBB);
-    static final Color TEXT_DIM      = new Color(0x99885A);
+    static final Color BG_DARK = new Color(0x2B1E0E);
+    static final Color BG_MID = new Color(0x3B2B14);
+    static final Color BG_PANEL = new Color(0x1A1008);
+    static final Color GOLD = new Color(0xC8972A);
+    static final Color GOLD_LIGHT = new Color(0xF5C842);
+    static final Color TEXT_MAIN = new Color(0xEEDDBB);
+    static final Color TEXT_DIM = new Color(0x99885A);
 
     // Couleurs joueurs (mêmes que dans Grille)
     static final Color[] JOUEUR_COLORS = {
-        new Color(0x3BAEFF), new Color(0xFF4D4D),
-        new Color(0x4DFF91), new Color(0xFFDD00)
+            new Color(0x3BAEFF), new Color(0xFF4D4D),
+            new Color(0x4DFF91), new Color(0xFFDD00)
     };
 
     private Desert desert;
@@ -32,6 +32,7 @@ public class Vue extends JFrame {
     private PanneauLog panneauLog;
     private PanneauJoueurs panneauJoueurs;
     private PanneauActions panneauActions;
+    private PanneauPieces panneauPieces;
 
     public Vue(Desert desert) {
         super("Le Desert Interdit");
@@ -49,6 +50,7 @@ public class Vue extends JFrame {
         grille.rafraichir();
         panneauJoueurs.rafraichir();
         panneauActions.rafraichir();
+        panneauPieces.rafraichir();
         String etat = desert.etatPartie();
         if (!etat.equals("EN_COURS")) {
             afficherFinPartie(etat);
@@ -102,6 +104,9 @@ public class Vue extends JFrame {
         // SUD : joueurs
         panneauJoueurs = new PanneauJoueurs();
         add(panneauJoueurs, BorderLayout.SOUTH);
+        // OUEST : pieces
+        panneauPieces = new PanneauPieces();
+        add(panneauPieces, BorderLayout.WEST);
     }
 
     private void afficherFinPartie(String etat) {
@@ -122,16 +127,19 @@ public class Vue extends JFrame {
     // Barre d'infos (NORD)
     // ==================================================================
     private class PanneauInfo extends JPanel {
-        private JLabel lblTour    = info("Tour : 0");
-        private JLabel lblSable   = info("Sable : 0 / 43");
+        private JLabel lblTour = info("Tour : 0");
+        private JLabel lblSable = info("Sable : 0 / 43");
         private JLabel lblTempete = info("Tempete : 0.0 / 7");
-        private JLabel lblEtat    = info("EN COURS");
+        private JLabel lblEtat = info("EN COURS");
 
         PanneauInfo() {
             setLayout(new GridLayout(1, 4, 0, 0));
             setBackground(GOLD);
             setBorder(BorderFactory.createEmptyBorder(7, 14, 7, 14));
-            add(lblTour); add(lblSable); add(lblTempete); add(lblEtat);
+            add(lblTour);
+            add(lblSable);
+            add(lblTempete);
+            add(lblEtat);
         }
 
         private JLabel info(String t) {
@@ -181,8 +189,8 @@ public class Vue extends JFrame {
         class BlocJoueur extends JPanel {
             private Joueur joueur;
             private int idx;
-            private JLabel lblNom   = new JLabel("", SwingConstants.LEFT);
-            private JLabel lblEau   = new JLabel("", SwingConstants.LEFT);
+            private JLabel lblNom = new JLabel("", SwingConstants.LEFT);
+            private JLabel lblEau = new JLabel("", SwingConstants.LEFT);
             private JLabel lblPiece = new JLabel("", SwingConstants.LEFT);
 
             BlocJoueur(Joueur j, int idx) {
@@ -204,7 +212,9 @@ public class Vue extends JFrame {
                 lblPiece.setFont(new Font("SansSerif", Font.ITALIC, 10));
                 lblPiece.setForeground(GOLD_LIGHT);
 
-                add(lblNom); add(lblEau); add(lblPiece);
+                add(lblNom);
+                add(lblEau);
+                add(lblPiece);
                 rafraichir(false);
             }
 
@@ -216,7 +226,8 @@ public class Vue extends JFrame {
 
                 int eau = joueur.getNiveauEau();
                 StringBuilder sb = new StringBuilder("Eau: ");
-                for (int i = 0; i < 5; i++) sb.append(i < eau ? "o" : "_");
+                for (int i = 0; i < 5; i++)
+                    sb.append(i < eau ? "o" : "_");
                 lblEau.setText(sb.toString());
 
                 ArrayList<String> pieces = joueur.getPieces();
@@ -261,7 +272,8 @@ public class Vue extends JFrame {
 
         void ajouterLog(String msg) {
             modele.add(0, "-> " + msg);
-            if (modele.size() > 60) modele.remove(modele.size() - 1);
+            if (modele.size() > 60)
+                modele.remove(modele.size() - 1);
         }
     }
 
@@ -269,17 +281,17 @@ public class Vue extends JFrame {
     // Panneau des boutons d'action (EST-bas)
     // ==================================================================
     private class PanneauActions extends JPanel {
-        private JButton btnHaut    = btn("Haut");
-        private JButton btnBas     = btn("Bas");
-        private JButton btnGauche  = btn("Gauche");
-        private JButton btnDroite  = btn("Droite");
+        private JButton btnHaut = btn("Haut");
+        private JButton btnBas = btn("Bas");
+        private JButton btnGauche = btn("Gauche");
+        private JButton btnDroite = btn("Droite");
         private JButton btnFouille = btn("Fouiller");
         private JButton btnDeblaye = btn("Deblayer");
         private JButton btnRamasse = btn("Ramasser");
-        private JButton btnDonner  = btn("Donner eau");
-        private JButton btnFin     = btn("Fin de tour");
-        private JLabel  lblTour    = new JLabel("", SwingConstants.CENTER);
-        private JLabel  lblActions = new JLabel("", SwingConstants.CENTER);
+        private JButton btnDonner = btn("Donner eau");
+        private JButton btnFin = btn("Fin de tour");
+        private JLabel lblTour = new JLabel("", SwingConstants.CENTER);
+        private JLabel lblActions = new JLabel("", SwingConstants.CENTER);
 
         PanneauActions() {
             setBackground(BG_PANEL);
@@ -295,35 +307,53 @@ public class Vue extends JFrame {
             lblActions.setForeground(TEXT_MAIN);
             lblActions.setFont(new Font("SansSerif", Font.PLAIN, 11));
 
-            c.gridx = 0; c.gridy = 0; c.gridwidth = 2;
+            c.gridx = 0;
+            c.gridy = 0;
+            c.gridwidth = 2;
             add(lblTour, c);
             c.gridy = 1;
             add(lblActions, c);
             c.gridwidth = 1;
 
             // Croix directionnelle
-            c.gridy = 2; c.gridx = 0; c.gridwidth = 2;
+            c.gridy = 2;
+            c.gridx = 0;
+            c.gridwidth = 2;
             add(btnHaut, c);
             c.gridwidth = 1;
-            c.gridy = 3; c.gridx = 0; add(btnGauche, c);
-            c.gridx = 1;              add(btnDroite, c);
-            c.gridy = 4; c.gridx = 0; c.gridwidth = 2;
+            c.gridy = 3;
+            c.gridx = 0;
+            add(btnGauche, c);
+            c.gridx = 1;
+            add(btnDroite, c);
+            c.gridy = 4;
+            c.gridx = 0;
+            c.gridwidth = 2;
             add(btnBas, c);
             c.gridwidth = 1;
 
             // Séparateur
-            c.gridy = 5; c.gridx = 0; c.gridwidth = 2;
+            c.gridy = 5;
+            c.gridx = 0;
+            c.gridwidth = 2;
             add(Box.createVerticalStrut(4), c);
             c.gridwidth = 1;
 
             // Actions
-            c.gridy = 6; c.gridx = 0; add(btnFouille, c);
-            c.gridx = 1;              add(btnDeblaye, c);
+            c.gridy = 6;
+            c.gridx = 0;
+            add(btnFouille, c);
+            c.gridx = 1;
+            add(btnDeblaye, c);
 
-            c.gridy = 7; c.gridx = 0; c.gridwidth = 2;
+            c.gridy = 7;
+            c.gridx = 0;
+            c.gridwidth = 2;
             add(btnRamasse, c);
 
-            c.gridy = 8; c.gridx = 0; c.gridwidth = 2;
+            c.gridy = 8;
+            c.gridx = 0;
+            c.gridwidth = 2;
             btnDonner.setBackground(new Color(0x1A4A6A));
             add(btnDonner, c);
 
@@ -385,5 +415,78 @@ public class Vue extends JFrame {
             btnDonner.setEnabled(desert.getJoueurs().size() > 1);
         }
     }
-}
 
+    // ==================================================================
+    // Affichage des pieces (OUEST)
+    // ==================================================================
+    private class PanneauPieces extends JPanel {
+        private ArrayList<LignePiece> lignes = new ArrayList<>();
+
+        PanneauPieces() {
+            setBackground(BG_PANEL);
+            setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
+            setPreferredSize(new Dimension(200, 0));
+            setLayout(new GridLayout(0, 1, 4, 4));
+
+            for (Piece p : Desert.pieces) {
+                LignePiece l = new LignePiece(p);
+                lignes.add(l);
+                add(l);
+            }
+        }
+
+        void rafraichir() {
+            for (LignePiece l : lignes) {
+                l.rafraichir();
+            }
+        }
+
+        // --------------------------------------------------------------
+        class LignePiece extends JPanel {
+            private Piece piece;
+            private JLabel lblNom = new JLabel();
+            private JLabel lblPos = new JLabel();
+
+            LignePiece(Piece p) {
+                this.piece = p;
+
+                setLayout(new GridLayout(2, 1));
+                setBackground(BG_MID);
+                setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(TEXT_DIM, 1),
+                        BorderFactory.createEmptyBorder(4, 6, 4, 6)));
+
+                lblNom.setFont(new Font("SansSerif", Font.BOLD, 11));
+                lblNom.setForeground(GOLD_LIGHT);
+
+                lblPos.setFont(new Font("SansSerif", Font.PLAIN, 10));
+                lblPos.setForeground(TEXT_MAIN);
+
+                add(lblNom);
+                add(lblPos);
+
+                rafraichir();
+            }
+
+            void rafraichir() {
+                lblNom.setText(piece.getPiece());
+
+                if (piece.estRecuperee()) {
+                    lblPos.setText("✔ Recuperee");
+                    setBorder(BorderFactory.createLineBorder(new Color(0x4CAF50), 2));
+
+                } else if (piece.hasXIndice() && piece.hasYIndice()) {
+
+                    lblPos.setText("Position : ("
+                            + piece.getX() + "," + piece.getY() + ")");
+
+                } else {
+
+                    String x = piece.hasXIndice() ? String.valueOf(piece.getX()) : "?";
+                    String y = piece.hasYIndice() ? String.valueOf(piece.getY()) : "?";
+                    lblPos.setText("Position : (" + x + ", " + y + ")");
+                }
+            }
+        }
+    }
+}

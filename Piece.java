@@ -43,4 +43,12 @@ public class Piece {
     public void setRecuperee(boolean r) {
         recuperee = r;
     }
+
+    public boolean hasXIndice() {
+        return xIndice;
+    }
+
+    public boolean hasYIndice() {
+        return yIndice;
+    }
 }

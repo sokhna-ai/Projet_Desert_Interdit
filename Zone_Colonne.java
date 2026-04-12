@@ -22,5 +22,6 @@ public class Zone_Colonne extends Zone{
     }
     public void actionSpeciale(Desert d) {
         System.out.println(this.pieceReference.getPiece() + " est sur la Colonne " + this.numeroColonne);
+        pieceReference.setXIndice(true);
     }
 }
